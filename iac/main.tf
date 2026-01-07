@@ -8,14 +8,43 @@ terraform {
 }
 
 provider "aws" {
- region = "us-east-1"
+ region = var.region
 }
 
-resource "aws_instance" "example" {
- ami           = "ami-0a3c3a20c09d6f377"
- instance_type = "t3.micro"
+resource "aws_security_group" "web_sg" {
+ name        = "devops-web-sg"
+ description = "Allow HTTP and SSH"
+
+ ingress {
+   from_port   = 22
+   to_port     = 22
+   protocol    = "tcp"
+   cidr_blocks = ["0.0.0.0/0"]
+ }
+
+ ingress {
+   from_port   = 80
+   to_port     = 80
+   protocol    = "tcp"
+   cidr_blocks = ["0.0.0.0/0"]
+ }
+
+ egress {
+   from_port   = 0
+   to_port     = 0
+   protocol    = "-1"
+   cidr_blocks = ["0.0.0.0/0"]
+ }
+}
+
+resource "aws_instance" "devops" {
+ ami           = "ami-0c02fb55956c7d316" # Amazon Linux 2 (us-east-1)
+ instance_type = var.instance_type
+ key_name      = var.key_name
+
+ vpc_security_group_ids = [aws_security_group.web_sg.id]
 
  tags = {
-   Name = "devops-ec2"
+   Name = "DevOps-EC2"
  }
 }
